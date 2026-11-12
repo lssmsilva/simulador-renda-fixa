@@ -1,0 +1,15 @@
+{
+  "conferido_em": "2026-11-12",
+  "ir_regressivo": [
+    {"ate_dias": 180, "aliquota": 0.225},
+    {"ate_dias": 360, "aliquota": 0.20},
+    {"ate_dias": 720, "aliquota": 0.175},
+    {"ate_dias": 999999, "aliquota": 0.15}
+  ],
+  "dias_por_mes": 30.4,
+  "poupanca": {"rendimento_mensal": 0.005, "limite_selic_aa": 8.5, "fracao_selic_abaixo_limite": 0.7},
+  "tesouro_selic": {"custodia_aa": 0.002, "isento_ate": 10000.0, "spread_sobre_cdi": 0.0},
+  "lci_lca": {"isenta_ir": true, "prazo_minimo_meses": 6},
+  "fgc": {"limite_cpf_instituicao": 250000, "limite_global_4_anos": 1000000},
+  "fontes": "Ver etapa1_regras_vigentes.md"
+}

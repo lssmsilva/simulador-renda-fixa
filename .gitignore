@@ -1,0 +1,7 @@
+__pycache__/
+.pytest_cache/
+.ipynb_checkpoints/
+site/
+data/dados.json
+*.log
+node_modules/
