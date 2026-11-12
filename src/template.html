@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vale a pena? Simulador de renda fixa</title>
+<style>
+  :root{--bg:#f3f6fb;--card:#fff;--tx:#18202f;--mut:#5b6679;--bd:#e2e7f0;--ac:#2456e6;--acbg:#e8eefe;
+    --ok:#0f7a45;--okbg:#e3f5ea;--at:#8f5b00;--atbg:#fff1d0;--ru:#b3261e;--rubg:#fde7e5;--ref:#46526b;--refbg:#eaeef6;--c1:#2456e6;--c2:#0f8a5f;--c3:#b36b00;--c4:#6b7487}
+  @media (prefers-color-scheme:dark){:root{--bg:#0f131b;--card:#192031;--tx:#eaeef7;--mut:#a0aac0;--bd:#2a3349;--ac:#7f9fff;--acbg:#1f2a4a;
+    --ok:#5fd699;--okbg:#12301f;--at:#f2bb4d;--atbg:#3a2c0e;--ru:#ff8f85;--rubg:#3b1815;--ref:#aab5cd;--refbg:#232b3f;--c1:#7f9fff;--c2:#4fd49b;--c3:#f2bb4d;--c4:#a0aac0}}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--tx);font:17px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  main{max-width:760px;margin:0 auto;padding:24px 16px 56px}
+  h1{font-size:1.7rem;line-height:1.2;margin:0 0 6px}
+  h2{font-size:1.05rem;margin:0 0 10px}
+  .lead{color:var(--mut);margin:0 0 20px}
+  .card{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:18px;margin-bottom:14px}
+  .step{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:var(--ac);color:#fff;font-weight:700;font-size:.85rem;margin-right:8px}
+  .fields{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media (max-width:520px){.fields{grid-template-columns:1fr}}
+  label{display:block;font-size:.95rem;font-weight:600}
+  input[type=number]{width:100%;margin-top:6px;padding:12px;border:1.5px solid var(--bd);border-radius:10px;background:var(--bg);color:var(--tx);font:inherit}
+  input:focus,button:focus-visible{outline:3px solid var(--ac);outline-offset:1px}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 4px}
+  .chip{border:1.5px solid var(--bd);background:var(--card);color:var(--tx);padding:8px 12px;border-radius:99px;font:inherit;font-size:.9rem;cursor:pointer}
+  .chip[aria-pressed=true]{background:var(--acbg);border-color:var(--ac);color:var(--ac);font-weight:600}
+  .check{display:flex;gap:8px;align-items:center;font-weight:500;margin-top:12px;cursor:pointer}
+  .check input{width:20px;height:20px}
+  .hint{font-size:.85rem;color:var(--mut);font-weight:400}
+  .answer{background:var(--acbg);border-color:transparent}
+  .answer .big{font-size:1.35rem;line-height:1.35;margin:0}
+  .answer p{margin:8px 0 0;color:var(--mut)}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media (max-width:640px){.grid{grid-template-columns:1fr}}
+  .prod{margin:0;position:relative}
+  .prod h3{margin:0;font-size:1.1rem}
+  .sub{color:var(--mut);font-size:.88rem;margin:2px 0 10px}
+  .tag{position:absolute;top:-10px;right:14px;background:var(--ac);color:#fff;font-size:.75rem;font-weight:700;padding:3px 10px;border-radius:99px}
+  .badge{display:inline-flex;gap:6px;align-items:center;padding:4px 12px;border-radius:99px;font-weight:700;font-size:.85rem}
+  .favoravel{background:var(--okbg);color:var(--ok)} .atencao{background:var(--atbg);color:var(--at)}
+  .desfavoravel{background:var(--rubg);color:var(--ru)} .referencia{background:var(--refbg);color:var(--ref)}
+  .final{font-size:1.6rem;font-weight:800;margin:12px 0 0;letter-spacing:-.5px}
+  .gain{color:var(--mut);font-size:.9rem;margin:0 0 10px}
+  .q{display:flex;justify-content:space-between;font-size:.92rem;padding:6px 0;border-top:1px solid var(--bd)}
+  .yes{color:var(--ok);font-weight:700}.no{color:var(--ru);font-weight:700}.na{color:var(--mut)}
+  details{margin-top:8px} summary{cursor:pointer;font-weight:600;font-size:.92rem;color:var(--ac);padding:4px 0}
+  .calc{width:100%;border-collapse:collapse;font-size:.9rem;margin:6px 0}
+  .calc td{padding:5px 0;border-bottom:1px dashed var(--bd)} .calc td:last-child{text-align:right;font-variant-numeric:tabular-nums}
+  .calc tr:last-child td{border-bottom:0;font-weight:700}
+  .note{font-size:.85rem;color:var(--mut);margin:6px 0 0}
+  .chart .row{display:flex;justify-content:space-between;font-size:.92rem;margin-top:10px}
+  .track{position:relative;height:14px;background:var(--refbg);border-radius:8px;margin-top:4px}
+  .track i{position:absolute;left:0;top:0;bottom:0;background:var(--ac);border-radius:8px;min-width:3px}
+  .track b{position:absolute;top:-5px;bottom:-5px;width:2px;background:var(--ru)}
+  .legend{font-size:.82rem;color:var(--mut);margin-top:12px}
+  .legend span{color:var(--ru);font-weight:700}
+  .t{all:unset;color:var(--ac);border-bottom:1.5px dotted var(--ac);cursor:help;font-weight:inherit}
+  .t:focus-visible{outline:3px solid var(--ac)}
+  dialog{border:0;border-radius:16px;padding:20px;max-width:420px;width:calc(100% - 32px);background:var(--card);color:var(--tx);box-shadow:0 10px 40px rgba(0,0,0,.3)}
+  dialog::backdrop{background:rgba(0,0,0,.45)}
+  dialog h3{margin:0 0 8px} dialog p{margin:0 0 14px}
+  dialog button{background:var(--ac);color:#fff;border:0;border-radius:10px;padding:10px 18px;font:inherit;font-weight:600;cursor:pointer}
+  .warn{background:var(--atbg);color:var(--at);padding:10px 14px;border-radius:12px;margin-bottom:14px;font-size:.92rem}
+  .how{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;font-size:.9rem;color:var(--mut)}
+  @media (max-width:640px){.how{grid-template-columns:1fr}}
+  .lc{width:100%;height:auto;display:block;touch-action:pan-y;cursor:crosshair}
+  .lc text{fill:var(--mut);font-size:11px}
+  .lc .ln{fill:none;stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round}
+  .lc .grid{stroke:var(--bd);stroke-width:1}
+  .lc .cur{stroke:var(--mut);stroke-width:1;stroke-dasharray:3 3}
+  .s-cdb{stroke:var(--c1)} .s-lci_lca{stroke:var(--c2)} .s-tesouro_selic{stroke:var(--c3)} .s-poupanca{stroke:var(--c4)}
+  .s-infl{stroke:var(--ru);stroke-dasharray:6 4}
+  .lc text.l-cdb{fill:var(--c1)} .lc text.l-lci_lca{fill:var(--c2)} .lc text.l-tesouro_selic{fill:var(--c3)} .lc text.l-poupanca{fill:var(--c4)} .lc text.l-infl{fill:var(--ru)}
+  .lc text.lab{font-weight:700;font-size:12px}
+  .read{font-size:.9rem;margin-top:8px;min-height:3.2em}
+  .read b{font-variant-numeric:tabular-nums}
+  .capa{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:32px 20px;background:radial-gradient(1200px 500px at 50% -10%,var(--acbg),transparent),var(--bg)}
+  .capa[hidden]{display:none}
+  .capa-in{max-width:640px;text-align:center}
+  .eyebrow{display:inline-block;font-size:.85rem;font-weight:700;color:var(--ac);background:var(--acbg);padding:5px 14px;border-radius:99px;margin:0 0 18px}
+  .capa h1{font-size:clamp(1.9rem,6vw,2.8rem);line-height:1.12;letter-spacing:-.5px;margin:0 0 14px}
+  .capa .lead{font-size:1.1rem;margin:0 auto 26px;max-width:520px}
+  .cta{background:var(--ac);color:#fff;border:0;border-radius:14px;padding:16px 30px;font:inherit;font-weight:700;font-size:1.1rem;cursor:pointer;box-shadow:0 8px 24px rgba(36,86,230,.28)}
+  .cta:hover{filter:brightness(1.08)} .cta:focus-visible{outline:3px solid var(--tx);outline-offset:3px}
+  .pts{list-style:none;padding:0;margin:34px 0 0;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;text-align:left}
+  @media (max-width:640px){.pts{grid-template-columns:1fr}}
+  .pts li{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px}
+  .pts b{display:block;margin-bottom:2px} .pts span{font-size:.9rem;color:var(--mut)}
+  .hoje{margin-top:26px;font-size:.85rem;color:var(--mut)}
+  .back{display:inline-block;margin-bottom:10px;font-size:.9rem;color:var(--ac);text-decoration:none;font-weight:600}
+  main[hidden]{display:none}
+  footer{font-size:.8rem;color:var(--mut);margin-top:24px}
+</style>
+</head>
+<body>
+<section id="capa" class="capa">
+  <div class="capa-in">
+    <p class="eyebrow">Simulador gratuito de renda fixa</p>
+    <h1>Seu dinheiro rende mais do que a inflação?</h1>
+    <p class="lead">Compare poupança, CDB, LCI/LCA e Tesouro Selic em poucos cliques. Com imposto já descontado e sem termos difíceis.</p>
+    <button id="comecar" class="cta">Começar a simular →</button>
+    <ul class="pts">
+      <li><b>4 opções lado a lado</b><span>Veja onde o seu dinheiro rende mais.</span></li>
+      <li><b>Já sem imposto</b><span>O valor que realmente sobra no seu bolso.</span></li>
+      <li><b>Explica tudo</b><span>Toque nas palavras sublinhadas e entenda.</span></li>
+    </ul>
+    <p class="hoje" id="hoje"></p>
+  </div>
+</section>
+<main id="app" hidden>
+  <a href="#" id="voltar" class="back">← Início</a>
+  <h1>Seu dinheiro rende mais que a inflação?</h1>
+  <p class="lead">Conte quanto quer guardar e por quanto tempo. Mostramos, sem complicação, onde o dinheiro rende mais e se vale a pena.</p>
+
+  <div class="card">
+    <h2><span class="step">1</span>Quanto e por quanto tempo?</h2>
+    <div class="chips" role="group" aria-label="Atalhos">
+      <button class="chip" data-m="6" data-v="5000">Reserva de emergência</button>
+      <button class="chip" data-m="12" data-v="10000">Viagem no ano que vem</button>
+      <button class="chip" data-m="36" data-v="20000">Meta de 3 anos</button>
+    </div>
+    <div class="fields">
+      <label>Quanto você vai guardar agora? (R$)<input id="valor" type="number" inputmode="decimal" min="0" step="100" value="10000"></label>
+      <label>Por quantos meses?<input id="meses" type="number" inputmode="numeric" min="1" max="360" step="1" value="12"></label>
+    </div>
+    <label class="check"><input id="mensal" type="checkbox"> Também vou guardar um valor todo mês</label>
+    <div id="boxaporte" hidden style="margin-top:10px"><label>Quanto por mês? (R$)<input id="aporte" type="number" inputmode="decimal" min="0" step="50" value="500"></label></div>
+    <div class="offer">
+      <h2 style="margin-top:18px"><span class="step">2</span>Já viu uma oferta? <span class="hint">(opcional)</span></h2>
+      <p class="note" style="margin-top:0">No app do banco ou da corretora, a oferta aparece escrita assim: "CDB 105% do <button class="t" data-k="cdi">CDI</button>". Digite só o número. Não viu nenhuma? Deixe como está: são valores comuns hoje.</p>
+      <div class="fields">
+        <label>CDB paga quanto? <span class="hint">(% do CDI)</span><input id="pctcdb" type="number" inputmode="decimal" min="50" max="200" step="1" value="100"></label>
+        <label>LCI ou LCA paga quanto? <span class="hint">(% do CDI)</span><input id="pctlci" type="number" inputmode="decimal" min="50" max="200" step="1" value="90"></label>
+      </div>
+      <p class="note"><button class="t" data-k="pctcdi">O que significa esse número?</button></p>
+    </div>
+    <div id="aviso"></div>
+  </div>
+
+  <div id="out"></div>
+
+  <div class="card">
+    <h2>Como ler o resultado</h2>
+    <div class="how">
+      <div><b>Você termina com</b><br>é o dinheiro que sobra no seu bolso, já sem imposto.</div>
+      <div><b>Ganha da inflação?</b><br>se sim, seu dinheiro compra mais coisas depois do prazo. <button class="t" data-k="inflacao">Entenda</button></div>
+      <div><b>Ganha da poupança?</b><br>a poupança é a comparação: todo mundo conhece.</div>
+    </div>
+  </div>
+
+  <footer id="rodape"></footer>
+</main>
+
+<dialog id="gl"><h3 id="glt"></h3><p id="glp"></p><button id="glx">Entendi</button></dialog>
+
+<script>
+const DADOS = /*DADOS*/;
+const REGRAS = /*REGRAS*/;
+const VERSAO = /*VERSAO*/;
+</script>
+<script id="calc">
+function aliquotaIR(dias){for(const f of REGRAS.ir_regressivo){if(dias<=f.ate_dias)return f.aliquota}throw new Error("faixa IR")}
+function taxaMensalCDI(cdiAA,pct){return(Math.pow(1+cdiAA/100,1/12)-1)*pct/100}
+function depositos(valor,aporte,meses){const d=[[0,valor]];if(aporte>0)for(let k=1;k<meses;k++)d.push([k,aporte]);return d}
+function simPos(valor,aporte,meses,cdiAA,pct,isento){
+  const i=taxaMensalCDI(cdiAA,pct);let investido=0,bruto=0,ir=0;
+  for(const [mes,v] of depositos(valor,aporte,meses)){
+    const n=meses-mes,final=v*Math.pow(1+i,n),rend=final-v;
+    if(!isento)ir+=rend*aliquotaIR(n*REGRAS.dias_por_mes);
+    investido+=v;bruto+=final}
+  return{investido,bruto,ir,liquido:bruto-ir}}
+function simTesouro(valor,aporte,meses,cdiAA){
+  const t=REGRAS.tesouro_selic,b=simPos(valor,aporte,meses,cdiAA,100,false);
+  const medio=(b.investido+b.bruto)/2;
+  b.custodia=t.custodia_aa*(meses/12)*Math.max(0,medio-t.isento_ate);b.liquido-=b.custodia;return b}
+function simPoup(valor,aporte,meses,selicAA){
+  const p=REGRAS.poupanca;
+  const i=selicAA>p.limite_selic_aa?p.rendimento_mensal:(Math.pow(1+selicAA/100,1/12)-1)*p.fracao_selic_abaixo_limite;
+  let investido=0,bruto=0;
+  for(const [mes,v] of depositos(valor,aporte,meses)){investido+=v;bruto+=v*Math.pow(1+i,meses-mes)}
+  return{investido,bruto,ir:0,liquido:bruto}}
+function taxaAnualLiquida(inv,liq,meses){return(Math.pow(liq/inv,12/meses)-1)*100}
+function veredito(liq,poup,inv,meses,ipcaAA){
+  const infl=inv*Math.pow(1+ipcaAA/100,meses/12);
+  if(liq<=infl)return"desfavoravel";return liq>poup?"favoravel":"atencao"}
+function simularTudo(valor,aporte,meses,pctCdb,pctLci){
+  const cdi=DADOS.cdi.valor,selic=DADOS.selic.valor,ipca=DADOS.ipca_12m.valor;
+  const p={poupanca:simPoup(valor,aporte,meses,selic),
+           cdb:simPos(valor,aporte,meses,cdi,pctCdb,false),
+           tesouro_selic:simTesouro(valor,aporte,meses,cdi)};
+  if(meses>=REGRAS.lci_lca.prazo_minimo_meses)p.lci_lca=simPos(valor,aporte,meses,cdi,pctLci,true);
+  const pl=p.poupanca.liquido;
+  for(const [nome,r] of Object.entries(p)){
+    r.taxa=taxaAnualLiquida(r.investido,r.liquido,meses);
+    const infl=r.investido*Math.pow(1+ipca/100,meses/12);
+    r.inflacao=infl;
+    r.veredito=nome==="poupanca"?(r.liquido<=infl?"desfavoravel":"referencia"):veredito(r.liquido,pl,r.investido,meses,ipca)}
+  return p}
+</script>
+<script>
+const GLOSSARIO={
+ cdi:["CDI","É uma taxa de juros que os bancos usam como régua. Quando um investimento paga \"100% do CDI\", ele rende igual a essa taxa. Mais que 100% é melhor; menos que 100% é pior."],
+ pctcdi:["% do CDI","Os bancos anunciam o quanto pagam como porcentagem do CDI. Exemplo: um CDB que paga 110% do CDI rende 10% a mais que o CDI. É só um número para comparar. Se você não sabe, use o que já está preenchido."],
+ inflacao:["Inflação","É o quanto os preços subiram. Se tudo ficou 4% mais caro e seu dinheiro rendeu só 3%, você consegue comprar menos do que antes, mesmo tendo mais dinheiro. Ganhar da inflação é o mínimo que um investimento deve fazer."],
+ liquido:["Líquido","É o que sobra de verdade para você, depois de pagar o imposto. O valor bruto é antes do imposto."],
+ ir:["Imposto de Renda","Cobrado só sobre o que o dinheiro rendeu, não sobre o que você guardou. Quanto mais tempo guarda, menor a porcentagem: 22,5% até 6 meses, 20% até 1 ano, 17,5% até 2 anos e 15% depois."],
+ fgc:["FGC","É um seguro que protege seu dinheiro se o banco quebrar. Cobre até R$ 250 mil por pessoa em cada instituição. A poupança, o CDB e a LCI/LCA têm essa proteção."],
+ liquidez:["Liquidez","É a facilidade de pegar o dinheiro de volta. Liquidez diária significa que você resgata quando quiser."],
+ carencia:["Carência","Período em que você não pode resgatar o dinheiro. LCI e LCA costumam ter carência de 6 meses ou mais."],
+ selic:["Tesouro Selic","É um empréstimo que você faz ao governo federal. É considerado o investimento mais seguro do país e rende parecido com o CDI."],
+ lci:["LCI e LCA","São empréstimos que você faz a um banco, usados para financiar imóveis (LCI) ou o agronegócio (LCA). Para pessoa física, não pagam Imposto de Renda."],
+ cdb:["CDB","É um empréstimo que você faz a um banco. O banco devolve com juros no prazo combinado."],
+ poupanca:["Poupança","A caderneta clássica. Rende pouco, mas é simples e todo mundo conhece. Usamos como comparação."]
+};
+const T=(k,txt)=>`<button class="t" data-k="${k}">${txt}</button>`;
+const INFO={
+ poupanca:{n:"Poupança",s:"A caderneta clássica",k:"poupanca",r:"Pode sacar quando quiser, mas o rendimento só cai no \"aniversário\" do mês."},
+ cdb:{n:"CDB",s:"Você empresta ao banco",k:"cdb",r:"Depende do título: alguns deixam sacar a qualquer hora, outros só no vencimento. Confira antes de aplicar."},
+ lci_lca:{n:"LCI / LCA",s:"Você empresta ao banco, sem imposto",k:"lci",r:"Costuma ter carência de 6 meses ou mais: o dinheiro fica preso nesse período."},
+ tesouro_selic:{n:"Tesouro Selic",s:"Você empresta ao governo",k:"selic",r:"Resgate em 1 dia útil. Garantido pelo governo federal."}
+};
+const SELO={favoravel:["✓","Vale a pena"],atencao:["!","Pense melhor"],desfavoravel:["✕","Não compensa"],referencia:["=","Comparação"]};
+const brl=n=>n.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+const pc=n=>n.toLocaleString("pt-BR",{minimumFractionDigits:1,maximumFractionDigits:1})+"%";
+const dt=s=>s.split("-").reverse().join("/");
+const $=id=>document.getElementById(id);
+const prazoTxt=m=>m%12===0?(m/12===1?"1 ano":(m/12)+" anos"):(m===1?"1 mês":m+" meses");
+
+function cartao(n,r,melhor,poup){
+  const i=INFO[n],[ic,lb]=SELO[r.veredito],infl=r.inflacao>=r.liquido;
+  const ganhaInfl=r.liquido>r.inflacao,ganhaPoup=r.liquido>poup.liquido;
+  const imposto=n==="poupanca"||n==="lci_lca"?"Isento":"− "+brl(r.ir);
+  const linhas=`<tr><td>Você guardou</td><td>${brl(r.investido)}</td></tr>
+    <tr><td>Rendeu</td><td>+ ${brl(r.bruto-r.investido)}</td></tr>
+    <tr><td>${T("ir","Imposto")}</td><td>${imposto}</td></tr>`+
+    (r.custodia>0?`<tr><td>Taxa da B3</td><td>− ${brl(r.custodia)}</td></tr>`:"")+
+    `<tr><td>Sobra no bolso</td><td>${brl(r.liquido)}</td></tr>`;
+  const eq=n==="lci_lca"?(()=>{const a=aliquotaIR(+$("meses").value*REGRAS.dias_por_mes),p=+$("pctlci").value||90,e=p/(1-a);
+     return `<p class="note">Com imposto de ${(a*100).toFixed(1).replace(".",",")}% neste prazo, uma LCI de ${p}% do CDI equivale a um CDB de ${e.toFixed(0)}% do CDI.</p>`})():"";
+  return `<div class="card prod">${melhor?'<span class="tag">Rende mais</span>':""}
+    <h3>${T(i.k,i.n)}</h3><div class="sub">${i.s}</div>
+    <span class="badge ${r.veredito}" aria-label="${lb}"><span aria-hidden="true">${ic}</span>${lb}</span>
+    <div class="final">${brl(r.liquido)}</div>
+    <div class="gain">Você termina com isso (ganho de ${brl(r.liquido-r.investido)})</div>
+    <div class="q"><span>Ganha da ${T("inflacao","inflação")}?</span><span class="${ganhaInfl?"yes":"no"}">${ganhaInfl?"Sim":"Não"}</span></div>
+    <div class="q"><span>Ganha da poupança?</span>${n==="poupanca"?'<span class="na">—</span>':`<span class="${ganhaPoup?"yes":"no"}">${ganhaPoup?"Sim":"Não"}</span>`}</div>
+    <details><summary>Ver a conta e o resgate</summary>
+      <table class="calc">${linhas}</table>
+      <p class="note"><b>Resgate:</b> ${i.r}</p>${eq}
+    </details></div>`}
+
+function render(){
+  const mensal=$("mensal").checked;$("boxaporte").hidden=!mensal;
+  const valor=Math.max(0,+$("valor").value||0),aporte=mensal?Math.max(0,+$("aporte").value||0):0;
+  const meses=Math.round(+$("meses").value||0),pctCdb=+$("pctcdb").value||100,pctLci=+$("pctlci").value||90;
+  $("aviso").innerHTML="";
+  document.querySelectorAll(".chip").forEach(c=>c.setAttribute("aria-pressed",String(+c.dataset.m===meses&&+c.dataset.v===valor)));
+  if(meses<1||(valor===0&&aporte===0)){$("out").innerHTML='<div class="warn">Preencha quanto quer guardar e por quantos meses para ver o resultado.</div>';return}
+  const p=simularTudo(valor,aporte,meses,pctCdb,pctLci);
+  if(!p.lci_lca)$("aviso").innerHTML=`<p class="note">LCI e LCA costumam exigir pelo menos 6 meses guardados, por isso não aparecem aqui. ${T("carencia","O que é carência?")}</p>`;
+  const cand=Object.entries(p).filter(([n])=>n!=="poupanca");
+  const [nm,rm]=cand.reduce((a,b)=>b[1].liquido>a[1].liquido?b:a);
+  const ganham=cand.filter(([n,r])=>r.liquido>r.inflacao).length;
+  const inv=p.poupanca.investido;
+  const aportTxt=aporte>0?` (${brl(valor)} agora e ${brl(aporte)} por mês)`:"";
+  let frase=ganham===0?"Neste cenário, nenhuma das opções ganha da inflação: o dinheiro perderia poder de compra.":
+     (ganham===cand.length?"Todas as opções ganham da inflação.":`${ganham} de ${cand.length} opções ganham da inflação.`);
+  const maisQPoup=rm.liquido-p.poupanca.liquido;
+  $("out").innerHTML=`<div class="card answer"><h2>O resultado</h2>
+    <p class="big">Guardando ${brl(inv)} por ${prazoTxt(meses)}${aportTxt}, o que mais rende no seu bolso é <b>${INFO[nm].n}</b>: você termina com <b>${brl(rm.liquido)}</b>.</p>
+    <p>${frase} ${maisQPoup>0?`Isso dá ${brl(maisQPoup)} a mais que a poupança.`:""}</p></div>
+    <div class="card chart"><h2>Quanto cada uma rende para você</h2>${grafico(p)}
+      <details><summary>Ver mês a mês como o dinheiro cresce</summary><div id="lin"></div></details></div>
+    <div class="grid">${Object.entries(p).sort((a,b)=>b[1].liquido-a[1].liquido).map(([n,r])=>cartao(n,r,n===nm,p.poupanca)).join("")}</div>`;
+  desenharLinhas(valor,aporte,pctCdb,pctLci,meses);
+}
+function grafico(p){
+  const ent=Object.entries(p),ganho=r=>r.liquido-r.investido;
+  const infl=p.poupanca.inflacao-p.poupanca.investido;
+  const max=Math.max(infl,...ent.map(([,r])=>ganho(r)))*1.08||1;
+  return ent.sort((a,b)=>b[1].liquido-a[1].liquido).map(([n,r])=>`<div class="row"><span>${INFO[n].n}</span><span>${brl(ganho(r))}</span></div>
+    <div class="track"><i style="width:${Math.max(0,ganho(r))/max*100}%"></i><b style="left:${infl/max*100}%" title="Mínimo para empatar com a inflação"></b></div>`).join("")+
+    `<div class="legend"><span>|</span> A linha vermelha é o mínimo que o dinheiro precisa render (${brl(infl)}) para <b>não perder</b> para a ${T("inflacao","inflação")}. Barra que passa dela: ganha da inflação.</div>`;
+}
+
+const SERIES=[["cdb","CDB"],["lci_lca","LCI/LCA"],["tesouro_selic","Tesouro"],["poupanca","Poupança"],["infl","Inflação"]];
+function serieMes(valor,aporte,pctCdb,pctLci,meses){
+  const S={cdb:[valor],lci_lca:[null],tesouro_selic:[valor],poupanca:[valor],infl:[valor]};
+  for(let k=1;k<=meses;k++){
+    const p=simularTudo(valor,aporte,k,pctCdb,pctLci);
+    S.cdb.push(p.cdb.liquido);S.tesouro_selic.push(p.tesouro_selic.liquido);S.poupanca.push(p.poupanca.liquido);
+    S.lci_lca.push(p.lci_lca?p.lci_lca.liquido:null);S.infl.push(p.poupanca.inflacao)}
+  return S}
+function desenharLinhas(valor,aporte,pctCdb,pctLci,meses){
+  const box=$("lin");if(!box)return;
+  const S=serieMes(valor,aporte,pctCdb,pctLci,meses);
+  const W=640,H=300,L=70,R=96,TP=14,B=32,pw=W-L-R,ph=H-TP-B;
+  const todos=SERIES.flatMap(([k])=>S[k]).filter(v=>v!==null&&isFinite(v));
+  let mn=Math.min(...todos),mx=Math.max(...todos);const pad=(mx-mn)*0.06||1;mn=Math.max(0,mn-pad);mx+=pad;
+  const X=k=>L+(meses?k/meses:0)*pw,Y=v=>TP+ph-(v-mn)/(mx-mn)*ph;
+  const fmt0=v=>v.toLocaleString("pt-BR",{style:"currency",currency:"BRL",maximumFractionDigits:0});
+  let g="";
+  for(let i=0;i<=3;i++){const v=mn+(mx-mn)*i/3;g+=`<line class="grid" x1="${L}" x2="${L+pw}" y1="${Y(v)}" y2="${Y(v)}"/><text x="${L-8}" y="${Y(v)+4}" text-anchor="end">${fmt0(v)}</text>`}
+  const xt=[0,Math.round(meses/2),meses].filter((v,i,a)=>a.indexOf(v)===i);
+  g+=xt.map(k=>`<text x="${X(k)}" y="${H-10}" text-anchor="${k===0?"start":k===meses?"end":"middle"}">${k===0?"Hoje":prazoTxt(k)}</text>`).join("");
+  let paths="",labs=[];
+  for(const [k,nome] of SERIES){
+    let d="",ini=true;
+    S[k].forEach((v,i)=>{if(v===null||!isFinite(v)){ini=true;return}d+=(ini?"M":"L")+X(i).toFixed(1)+" "+Y(v).toFixed(1)+" ";ini=false});
+    if(d)paths+=`<path class="ln s-${k}" d="${d}"/>`;
+    const ult=S[k][meses];if(ult!==null&&isFinite(ult))labs.push({k,nome,y:Y(ult)})}
+  labs.sort((a,b)=>a.y-b.y);
+  for(let i=1;i<labs.length;i++)if(labs[i].y-labs[i-1].y<14)labs[i].y=labs[i-1].y+14;
+  const rot=labs.map(l=>`<text class="lab l-${l.k}" x="${L+pw+8}" y="${l.y+4}">${l.nome}</text>`).join("");
+  const leit=k=>`Mês ${k===0?"0 (hoje)":k}: `+SERIES.filter(([c])=>S[c][k]!==null).map(([c,n])=>`<b class="l-${c}" style="color:var(--${c==="infl"?"ru":"c"+({cdb:1,lci_lca:2,tesouro_selic:3,poupanca:4})[c]})">${n} ${brl(S[c][k])}</b>`).join(" · ");
+  box.innerHTML=`<svg class="lc" viewBox="0 0 ${W} ${H}" role="img" aria-label="Gráfico do saldo mês a mês de cada opção e da inflação">${g}${paths}<line id="cur" class="cur" x1="${X(meses)}" x2="${X(meses)}" y1="${TP}" y2="${TP+ph}"/>${rot}</svg>
+    <div class="read" id="read">${leit(meses)}</div>
+    <p class="note">Toque ou passe o mouse no gráfico para ver cada mês. A linha tracejada vermelha é quanto você precisaria ter para só acompanhar a ${T("inflacao","inflação")}. Se resgatar antes do fim, o imposto muda e pode haver ${T("carencia","carência")}.</p>`;
+  const svg=box.querySelector("svg");
+  svg.addEventListener("pointermove",e=>{
+    const r=svg.getBoundingClientRect();if(!r.width)return;
+    const x=(e.clientX-r.left)/r.width*W;let k=Math.round((x-L)/pw*meses);k=Math.max(0,Math.min(meses,k));
+    const c=$("cur");c.setAttribute("x1",X(k));c.setAttribute("x2",X(k));$("read").innerHTML=leit(k)});
+}
+document.addEventListener("click",e=>{
+  const t=e.target.closest(".t");
+  if(t){e.preventDefault();const g=GLOSSARIO[t.dataset.k];$("glt").textContent=g[0];$("glp").textContent=g[1];$("gl").showModal();return}
+  const c=e.target.closest(".chip");
+  if(c){$("meses").value=c.dataset.m;$("valor").value=c.dataset.v;render()}
+});
+$("glx").addEventListener("click",()=>$("gl").close());
+$("gl").addEventListener("click",e=>{if(e.target===$("gl"))$("gl").close()});
+document.querySelector("main").addEventListener("input",render);
+$("rodape").innerHTML=`Taxas de hoje usadas na conta: ${T("cdi","CDI")} ${pc(DADOS.cdi.valor)} ao ano, inflação dos últimos 12 meses ${pc(DADOS.ipca_12m.valor)}. Atualizado em ${dt(DADOS.gerado_em.slice(0,10))} às ${DADOS.gerado_em.slice(11,16)} (dados do mercado de ${dt(DADOS.cdi.data)}); regras de imposto conferidas em ${dt(REGRAS.conferido_em)}.<br>Supomos que as taxas ficam iguais até o fim do prazo; na vida real elas mudam. Simulação educativa, não é recomendação de investimento.`+(DADOS.avisos&&DADOS.avisos.length?`<div class="warn" style="margin-top:8px">Atenção aos dados: ${DADOS.avisos.join("; ")}.</div>`:"");
+
+/* capa, memoria dos campos e atualizacao automatica */
+const CAMPOS=["valor","meses","aporte","pctcdb","pctlci"];
+function mostrarApp(){$("capa").hidden=true;$("app").hidden=false;window.scrollTo(0,0);try{sessionStorage.setItem("capa","1")}catch(e){}}
+function mostrarCapa(){$("capa").hidden=false;$("app").hidden=true;window.scrollTo(0,0);try{sessionStorage.removeItem("capa")}catch(e){}}
+function salvarCampos(){try{const o={mensal:$("mensal").checked};CAMPOS.forEach(c=>o[c]=$(c).value);sessionStorage.setItem("campos",JSON.stringify(o))}catch(e){}}
+function restaurarCampos(){try{const o=JSON.parse(sessionStorage.getItem("campos")||"null");if(!o)return;CAMPOS.forEach(c=>{if(o[c]!==undefined)$(c).value=o[c]});$("mensal").checked=!!o.mensal}catch(e){}}
+function aoMudarVersao(){salvarCampos();location.reload()}
+function verificarVersao(){
+  if(!["127.0.0.1","localhost"].includes(location.hostname)||typeof fetch!=="function")return;
+  fetch("versao.json?t="+Date.now(),{cache:"no-store"}).then(r=>r.json()).then(j=>{if(j.versao&&j.versao!==VERSAO)aoMudarVersao()}).catch(()=>{});
+}
+$("comecar").addEventListener("click",mostrarApp);
+$("voltar").addEventListener("click",e=>{e.preventDefault();mostrarCapa()});
+$("hoje").textContent=`Taxas de hoje: Selic ${pc(DADOS.selic.valor)} · CDI ${pc(DADOS.cdi.valor)} · inflação ${pc(DADOS.ipca_12m.valor)} ao ano`;
+document.querySelector("main").addEventListener("input",salvarCampos);
+restaurarCampos();
+try{if(sessionStorage.getItem("capa")==="1")mostrarApp()}catch(e){}
+setInterval(verificarVersao,5000);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)verificarVersao()});
+verificarVersao();
+render();
+</script>
+</body>
+</html>
