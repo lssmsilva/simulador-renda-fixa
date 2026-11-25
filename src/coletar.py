@@ -60,7 +60,10 @@ def sgs(code, inicio, fim):
 
 
 def tesouro_selic():
-    r = baixar(URL_TESOURO, timeout=120)
+    try:
+        r = baixar(URL_TESOURO, timeout=120)
+    except Exception as e:  # noqa: BLE001
+        raise RuntimeError(f"Tesouro (CSV) falhou: {e}") from e
     t = pd.read_csv(io.BytesIO(r.content), sep=";", decimal=",", encoding="latin1")
     t["Data Base"] = pd.to_datetime(t["Data Base"], format="%d/%m/%Y")
     s = t[t["Tipo Titulo"].str.contains("Selic")]

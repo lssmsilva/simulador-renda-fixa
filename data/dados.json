@@ -1,0 +1,21 @@
+{
+  "gerado_em": "2026-11-13 12:13",
+  "selic": {
+    "valor": 13.75,
+    "data": "2026-11-13"
+  },
+  "cdi": {
+    "valor": 13.65,
+    "data": "2026-11-12"
+  },
+  "ipca_12m": {
+    "valor": 4.6284,
+    "data_ref": "2026-10-01"
+  },
+  "tesouro_selic": {
+    "data_base": "2026-11-12",
+    "taxa_venda": 0.03,
+    "pu_venda": 20281.26
+  },
+  "avisos": []
+}
