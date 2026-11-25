@@ -126,17 +126,35 @@ def montar(selic, cdi_dia, ipca_mes, tesouro):
     }
 
 
+def tesouro_anterior(erro, caminho=None):
+    """Tesouro fora do ar: reaproveita o ultimo valor salvo e avisa (BCB segue atualizado)."""
+    try:
+        antigo = json.loads((caminho or SAIDA).read_text(encoding="utf-8"))["tesouro_selic"]
+        data = datetime.strptime(antigo["data_base"], "%Y-%m-%d").strftime("%d/%m/%Y")
+    except Exception:  # noqa: BLE001
+        raise RuntimeError(f"{erro} (e nao ha dado anterior do Tesouro)") from erro
+    print("AVISO:", erro, "- mantendo Tesouro de", data)
+    return antigo, f"Tesouro indisponivel; usando dado de {data}"
+
+
 def main():
     hoje = pd.Timestamp.today().normalize()
     try:
         selic = sgs(432, hoje - timedelta(days=400), hoje)
         cdi = sgs(12, hoje - timedelta(days=30), hoje)
         ipca = sgs(433, hoje - timedelta(days=550), hoje)
-        dados = montar(selic, cdi, ipca, tesouro_selic())
+        aviso_tesouro = None
+        try:
+            tesouro = tesouro_selic()
+        except Exception as e:  # noqa: BLE001
+            tesouro, aviso_tesouro = tesouro_anterior(e)
+        dados = montar(selic, cdi, ipca, tesouro)
     except Exception as e:  # noqa: BLE001
         print("ERRO na coleta, mantendo dados.json anterior:", e)
         return 1
     erros, avisos = validar(dados)
+    if aviso_tesouro:
+        avisos.append(aviso_tesouro)
     dados["avisos"] = avisos
     if erros:
         print("VALIDACAO FALHOU, nao gravei:", erros)
