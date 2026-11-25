@@ -77,3 +77,23 @@ def test_baixar_desiste_depois_das_tentativas(monkeypatch):
     monkeypatch.setattr(coletar.time, "sleep", lambda s: None)
     with pytest.raises(RuntimeError):
         coletar.baixar("http://x", tentativas=3)
+
+
+def test_tesouro_anterior_reaproveita_ultimo_dado(tmp_path):
+    import json
+    import coletar
+
+    f = tmp_path / "dados.json"
+    f.write_text(json.dumps({"tesouro_selic": {"data_base": "2026-11-12",
+                 "taxa_venda": 0.03, "pu_venda": 20281.26}}), encoding="utf-8")
+    dado, aviso = coletar.tesouro_anterior(RuntimeError("x"), caminho=f)
+    assert dado["pu_venda"] == 20281.26
+    assert "12/11/2026" in aviso
+
+
+def test_tesouro_anterior_sem_dado_salvo_falha(tmp_path):
+    import coletar
+    import pytest
+
+    with pytest.raises(RuntimeError):
+        coletar.tesouro_anterior(RuntimeError("x"), caminho=tmp_path / "nao_existe.json")
