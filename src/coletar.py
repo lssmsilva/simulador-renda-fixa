@@ -5,8 +5,10 @@ Regras: sempre usar datas (nao /ultimos/N, limitado a 20); nunca sobrescrever da
 se a validacao falhar (o dashboard continua com o ultimo dado bom e mostra a data).
 Uso: python src/coletar.py
 """
+import io
 import json
 import sys
+import time
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -21,26 +23,45 @@ SAIDA = Path(__file__).resolve().parent.parent / "data" / "dados.json"
 
 
 # ---------- busca (rede) ----------
+CABECALHO = {"User-Agent": "Mozilla/5.0 (compatible; simulador-renda-fixa/1.0)"}
+
+
+def baixar(url, params=None, tentativas=5, pausa=3, timeout=60):
+    """GET com novas tentativas e pausa crescente (3s, 6s, 12s...).
+
+    As APIs publicas as vezes derrubam a conexao (Connection reset by peer);
+    quase sempre funciona na tentativa seguinte.
+    """
+    ultimo_erro = None
+    for i in range(tentativas):
+        try:
+            r = requests.get(url, params=params, headers=CABECALHO, timeout=timeout)
+            if not r.ok:
+                raise RuntimeError(f"{r.status_code}: {r.text[:200]}")
+            return r
+        except Exception as e:  # noqa: BLE001
+            ultimo_erro = e
+            if i < tentativas - 1:
+                time.sleep(pausa * 2 ** i)
+    raise RuntimeError(f"falhou apos {tentativas} tentativas: {ultimo_erro}")
+
+
 def sgs(code, inicio, fim):
     params = {"formato": "json", "dataInicial": inicio.strftime("%d/%m/%Y"),
               "dataFinal": fim.strftime("%d/%m/%Y")}
-    ultimo_erro = None
-    for _ in range(2):  # uma nova tentativa
-        try:
-            r = requests.get(BCB.format(code=code), params=params, timeout=30)
-            if not r.ok:
-                raise RuntimeError(f"{r.status_code}: {r.text[:200]}")
-            df = pd.DataFrame(r.json())
-            df["data"] = pd.to_datetime(df["data"], format="%d/%m/%Y")
-            df["valor"] = pd.to_numeric(df["valor"])
-            return df.set_index("data")["valor"]
-        except Exception as e:  # noqa: BLE001
-            ultimo_erro = e
-    raise RuntimeError(f"SGS {code} falhou: {ultimo_erro}")
+    try:
+        r = baixar(BCB.format(code=code), params=params)
+        df = pd.DataFrame(r.json())
+        df["data"] = pd.to_datetime(df["data"], format="%d/%m/%Y")
+        df["valor"] = pd.to_numeric(df["valor"])
+        return df.set_index("data")["valor"]
+    except Exception as e:  # noqa: BLE001
+        raise RuntimeError(f"SGS {code} falhou: {e}") from e
 
 
 def tesouro_selic():
-    t = pd.read_csv(URL_TESOURO, sep=";", decimal=",", encoding="latin1")
+    r = baixar(URL_TESOURO, timeout=120)
+    t = pd.read_csv(io.BytesIO(r.content), sep=";", decimal=",", encoding="latin1")
     t["Data Base"] = pd.to_datetime(t["Data Base"], format="%d/%m/%Y")
     s = t[t["Tipo Titulo"].str.contains("Selic")]
     dia = s["Data Base"].max()

@@ -43,3 +43,37 @@ def test_cdi_antigo_gera_aviso_nao_erro():
 def test_ipca_absurdo():
     d = bom(); d["ipca_12m"]["valor"] = 80
     assert validar(d, HOJE)[0]
+
+
+def test_baixar_tenta_de_novo_apos_queda(monkeypatch):
+    import coletar
+
+    chamadas = {"n": 0}
+
+    class Resp:
+        ok = True
+        content = b"ok"
+
+    def falso_get(*a, **k):
+        chamadas["n"] += 1
+        if chamadas["n"] < 3:
+            raise ConnectionResetError("Connection reset by peer")
+        return Resp()
+
+    monkeypatch.setattr(coletar.requests, "get", falso_get)
+    monkeypatch.setattr(coletar.time, "sleep", lambda s: None)
+    assert coletar.baixar("http://x").content == b"ok"
+    assert chamadas["n"] == 3
+
+
+def test_baixar_desiste_depois_das_tentativas(monkeypatch):
+    import coletar
+    import pytest
+
+    def sempre_cai(*a, **k):
+        raise ConnectionResetError("Connection reset by peer")
+
+    monkeypatch.setattr(coletar.requests, "get", sempre_cai)
+    monkeypatch.setattr(coletar.time, "sleep", lambda s: None)
+    with pytest.raises(RuntimeError):
+        coletar.baixar("http://x", tentativas=3)
